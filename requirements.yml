@@ -3,3 +3,14 @@ channels:
   - defaults
 dependencies:
   - python=3.11
+  - ipykernel
+  - matplotlib
+  - netcdf4
+  - opencv
+  - pyyaml
+  - scikit-learn
+  - xarray
+  - xgboost
+  - tqdm
+  - pytorch
+  - seaborn
