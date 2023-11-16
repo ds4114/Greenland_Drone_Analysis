@@ -14,7 +14,7 @@ from torch.nn import MaxPool2d, MaxUnpool2d
 from torch.nn import ReLU, Sigmoid, Softmax
 from torch.nn import LogSoftmax
 from torch import flatten
-from torch.nn import MSELoss
+from torch.nn import MSELoss, CrossEntropyLoss
 import torch.optim as optim
 from tqdm import tqdm
 from scipy import ndimage
@@ -151,7 +151,7 @@ ds = FullImageDataset(dir="train", transform=custom_transforms)
 #     cv2.imwrite(f"train/image{i}.tif", np.rint(im.squeeze().numpy() * 255).astype(np.uint8).T)
 
 # np.savetxt("train_low.csv", ds.image)
-dl = DataLoader(ds, 4, shuffle=True)
+dl = DataLoader(ds, 5, shuffle=True)
 print("Training set created")
 
 ds_val = FullImageDataset(dir="val")
@@ -284,49 +284,138 @@ def uncertianty_penalty(predictions, alpha=.05):
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 print(device)
 
-model = FeatureNet()
-model.load_state_dict(torch.load("models/best_model.pickle"))
-model = model.to(device)
-model.eval()
-with torch.no_grad():
-    for i in range(22, 30):
-        example_image = ds_test.__getitem__(i)
 
-        cv2.imwrite(f"images/item{i}green.tif", np.rint(example_image[0, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}red.tif", np.rint(example_image[1, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}nir.tif", np.rint(example_image[2, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}re.tif", np.rint(example_image[3, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}ndvi.tif", np.rint(example_image[4, :, :].numpy()*255).astype(np.uint8))
+#
+# model = FeatureNet()
+# model.load_state_dict(torch.load("models/best_model.pickle"))
+# model = model.to(device)
+# model.eval()
+# with torch.no_grad():
+#     for i in range(22, 30):
+#         example_image = ds_test.__getitem__(i)
+#
+#         cv2.imwrite(f"images_test/initial_images/item{i}green.tif", np.rint(example_image[0, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}red.tif", np.rint(example_image[1, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}nir.tif", np.rint(example_image[2, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}re.tif", np.rint(example_image[3, :, :].numpy() * 255).astype(np.uint8))
+#         # cv2.imwrite(f"initial_images/item{i}ndvi.tif", np.rint(example_image[4, :, :].numpy()*255).astype(np.uint8))
+#
+#         ex = example_image.to(device)
+#         ex = torch.reshape(ex, (1, ex.shape[0], ex.shape[1], ex.shape[2]))
+#         pred, sing = model(ex)
+#
+#         pred, sing = pred.detach().cpu(), sing.detach().cpu()  # sing.detach().cpu()
+#         pred = pred.squeeze()
+#         cv2.imwrite(f"images_test/initial_images/item{i}PredG.tif", np.rint(pred[0, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}PredR.tif", np.rint(pred[1, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}PredNIR.tif", np.rint(pred[2, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}PredRE.tif", np.rint(pred[3, :, :].numpy() * 255).astype(np.uint8))
+#
+#         cv2.imwrite(f"images_test/initial_images/item{i}Class1.tif", np.rint(sing.squeeze()[0, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}Class2.tif", np.rint(sing.squeeze()[1, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}Class3.tif", np.rint(sing.squeeze()[2, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}Class4.tif", np.rint(sing.squeeze()[3, :, :].numpy() * 255).astype(np.uint8))
+#         cv2.imwrite(f"images_test/initial_images/item{i}Class5.tif", np.rint(sing.squeeze()[4, :, :].numpy() * 255).astype(np.uint8))
+#         # cv2.imwrite(f"initial_images/item{i}Class6.tif", np.rint(sing.squeeze()[5, :, :].numpy() * 255).astype(np.uint8))
+#         # cv2.imwrite(f"initial_images/item{i}Class7.tif", np.rint(sing.squeeze()[6, :, :].numpy() * 255).astype(np.uint8))
+#         # cv2.imwrite(f"initial_images/item{i}Class8.tif", np.rint(sing.squeeze()[7, :, :].numpy() * 255).astype(np.uint8))
+#         # cv2.imwrite(f"initial_images/item{i}Class9.tif", np.rint(sing.squeeze()[8, :, :].numpy() * 255).astype(np.uint8))
+#         # cv2.imwrite(f"initial_images/item{i}Class10.tif", np.rint(sing.squeeze()[9, :, :].numpy() * 255).astype(np.uint8))
 
-        ex = example_image.to(device)
-        ex = torch.reshape(ex, (1, ex.shape[0], ex.shape[1], ex.shape[2]))
-        pred, sing = model(ex)
 
-        pred, sing = pred.detach().cpu(), sing.detach().cpu()  # sing.detach().cpu()
-        pred = pred.squeeze()
-        cv2.imwrite(f"images/item{i}PredG.tif", np.rint(pred[0, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}PredR.tif", np.rint(pred[1, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}PredNIR.tif", np.rint(pred[2, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}PredRE.tif", np.rint(pred[3, :, :].numpy() * 255).astype(np.uint8))
+def Soft_Normalized_Cut_Loss(image, classes, r=1, s2=1):
+    # Long lines because I keep running out of memory
+    K = classes.shape[0]
 
-        cv2.imwrite(f"images/item{i}Class1.tif", np.rint(sing.squeeze()[0, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}Class2.tif", np.rint(sing.squeeze()[1, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}Class3.tif", np.rint(sing.squeeze()[2, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}Class4.tif", np.rint(sing.squeeze()[3, :, :].numpy() * 255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}Class5.tif", np.rint(sing.squeeze()[4, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class6.tif", np.rint(sing.squeeze()[5, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class7.tif", np.rint(sing.squeeze()[6, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class8.tif", np.rint(sing.squeeze()[7, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class9.tif", np.rint(sing.squeeze()[8, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class10.tif", np.rint(sing.squeeze()[9, :, :].numpy() * 255).astype(np.uint8))
+    def weight(u, s):
+        ret = torch.exp(torch.sum(torch.pow(
+            (u - s.view(u.shape[0], u.shape[1], 1, 1).expand((u.shape[0], u.shape[1], u.shape[2], u.shape[3]))), 2),
+                                  dim=(1)) / s2)
+        ret[ret < r] = 0
+        return ret
 
-'''
+    t_loss = 0
+
+    for k in range(K):
+        for i in range(image.shape[2]):
+            for j in range(image.shape[3]):
+                w = weight(image, image[:, :, i, j])
+                t_loss += torch.sum(w * classes[:, k, i, j].view(classes.shape[0], 1, 1).expand(
+                    (classes.shape[0], classes.shape[2], classes.shape[3])) * classes[:, k, :, :]) / torch.sum(
+                    w * classes[:, k, i, j].view(classes.shape[0], 1, 1).expand(
+                        (classes.shape[0], classes.shape[2], classes.shape[3])))
+                print(t_loss)
+
+    return K - t_loss
+
+
+def Modified_Soft_Normalized_Cut_Loss(image, classes):
+    K = classes.shape[1]
+
+    # def weighted_average(values, weights):
+    #     updated = torch.where(weights < .000001, .000001, weights)
+    #     val = torch.sum(updated*values)/torch.sum(updated)
+    #     return val
+
+    def weighted_average(mask, values, weights):
+
+        non_zero = torch.sum(mask[0])
+
+        mask = torch.stack([mask for i in range(values.shape[1])], dim=1)
+        masked = mask * values
+
+        avg = torch.sum(masked, dim=(0, 2, 3)) / (.000001 + non_zero)
+        assert values.shape[1] == avg.shape[0]
+
+        for i in range(avg.shape[0]):
+            masked[:, i, :, :] -= avg[i]
+
+        masked *= mask * weights
+
+        var = torch.pow(masked, 2)
+
+        scaled_vars = torch.sum(var) / (non_zero + .000001)
+
+        return scaled_vars
+
+    def distance(values, classes, k):
+
+        max_classes = torch.argmax(classes, dim=1, keepdim=True)
+        adjusted_max = torch.where(max_classes != k, 0, max_classes)
+        mask = torch.where(adjusted_max == k, 1, adjusted_max)
+        full_mask = torch.cat([mask[:, 0, :, :].unsqueeze(1) for i in range(values.shape[1])], dim=1)
+        masked_image = values * full_mask
+
+    def uncertainty(weights):
+        return torch.mean(.25 - (.5 - weights) ** 2) * .0001
+
+    losses = torch.zeros(K)
+
+    for k in range(K):
+        image_copy = image.clone()
+        classes_copy = classes.clone()
+        classes_mask = (torch.argmax(classes_copy, dim=1) == k).float()
+
+        # print(torch.stack([classes_mask for i in range(image_copy.shape[1])], dim=0).shape, image_copy.shape)
+
+        # weighted_average(image, torch.cat([classes_copy[:,k,:,:].unsqueeze(1) for i in range(image_copy.shape[1])], dim=1)) #
+        var = weighted_average(classes_mask, image_copy,
+                               torch.cat([classes_copy[:, k, :, :].unsqueeze(1) for i in range(image_copy.shape[1])],
+                                         dim=1))
+        uncert = uncertainty(classes_copy[:, k, :,
+                             :])  # uncertainty(torch.cat([classes_copy.unsqueeze(1) for i in range(image_copy.shape[1])], dim=1))
+
+        losses[k] = var  # torch.sum(torch.var(image_copy, dim=(2,3)))
+
+    return torch.mean(torch.pow(losses, 1 / 2))  # / torch.nonzero(losses).shape[0]
+
+
 learning_rate = 0.0001
 model = FeatureNet()
 model = model.to(device)
 optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-num_epochs = 50
+num_epochs = 5
 
 # blur = torchvision.transforms.GaussianBlur(101)
 last_improvement = 0
@@ -352,69 +441,77 @@ for epoch in tqdm(range(num_epochs)):
 
         # blur_classes = blur(classes)
 
-        # smoothness_loss = criterion(classes, blur_classes)*.005
-        up = 0#uncertianty_penalty(classes)
-        tp = 0# tv_regularization(classes)
-        fp = 0#few_channel_penalty(classes)
-        smoothness_loss = up + tp + fp
-        blur_loss += 0#tp.item()
-        uncert_loss += 0#up.item()
-        few_loss += 0#fp.item()
-        # smoothness_loss += torch.mean(ext_vals)
+        # # smoothness_loss = criterion(classes, blur_classes)*.005
+        # up = 0#uncertianty_penalty(classes)
+        # tp = 0# tv_regularization(classes)
+        # fp = 0#few_channel_penalty(classes)
+        # smoothness_loss = up + tp + fp
+        # blur_loss += 0#tp.item()
+        # uncert_loss += 0#up.item()
+        # few_loss += 0#fp.item()
+        # # smoothness_loss += torch.mean(ext_vals)
+        # print(f"\t{inputs.shape}, {classes.shape}")
+        smoothness_loss = Modified_Soft_Normalized_Cut_Loss(inputs.clone(), classes) * .01
 
-        # blur_loss += smoothness_loss.item()
+        smoothness_loss.backward()
+        optimizer.step()
+        optimizer.zero_grad()
+
+        blur_loss += smoothness_loss.item()
+        outputs, classes = model(inputs)
 
         acc_loss = criterion(outputs, inputs)
-        loss = acc_loss + smoothness_loss
+        loss = acc_loss  # + smoothness_loss * .01
         loss.backward()
         optimizer.step()
         running_loss += loss.item()
+        # print(f"Batch results: {smoothness_loss.item()}, {loss.item()}, {running_loss}, {blur_loss}")
 
-    model.eval()
-    val_loss = 0
-    with torch.no_grad():
-        for data in dl_val:
-            inputs = data
-            inputs = inputs.to(device)
+    # model.eval()
+    # val_loss = 0
+    # with torch.no_grad():
+    #     for data in dl_val:
+    #         inputs = data
+    #         inputs = inputs.to(device)
+    #
+    #         outputs, classes = model(inputs)
+    #
+    #         # blur_classes = blur(classes)
+    #
+    #         # smoothness_loss = criterion(classes, blur_classes)*.005
+    #         smoothness_loss = uncertianty_penalty(classes) + tv_regularization(classes) + few_channel_penalty(classes)
+    #         # smoothness_loss += torch.mean(ext_vals)
+    #
+    #         # blur_loss += smoothness_loss.item()
+    #
+    #         acc_loss = criterion(outputs, inputs)
+    #         loss = acc_loss + smoothness_loss
+    #         val_loss += loss.item()
 
-            outputs, classes = model(inputs)
+    print(f'Epoch [{epoch + 1}/{num_epochs}]')
 
-            # blur_classes = blur(classes)
-
-            # smoothness_loss = criterion(classes, blur_classes)*.005
-            smoothness_loss = uncertianty_penalty(classes) + tv_regularization(classes) + few_channel_penalty(classes)
-            # smoothness_loss += torch.mean(ext_vals)
-
-            # blur_loss += smoothness_loss.item()
-
-            acc_loss = criterion(outputs, inputs)
-            loss = acc_loss + smoothness_loss
-            val_loss += loss.item()
-
-    print(f'Epoch [{epoch + 1}/{num_epochs}] \n\tTrain Loss: {running_loss / len(dl)}')
-    print(f'\t\tBlur Loss: {blur_loss / len(dl)}')
-    print(f'\t\tUncertainty Loss: {uncert_loss / len(dl)}')
-    print(f'\t\tFew Loss: {few_loss / len(dl)}')
-    print(f'\t\tFinal Loss: {(running_loss - blur_loss - uncert_loss - few_loss) / len(dl)}')
-    print(f"\tVal Loss: {val_loss / len(dl_val)}")
-    if val_loss < best_val:
-        best_val = val_loss
-        last_improvement = epoch
-        torch.save(model.state_dict(), "models/best_model.pickle")
-    if epoch - last_improvement >= 5:
-        break
+    print(f'\t\tReconstruction Loss: {(running_loss) / len(dl)}')
+    print(f'\t\tSegmentation Loss: {(blur_loss) / len(dl)}')
+    # print(f"\tVal Loss: {val_loss / len(dl_val)}")
+    # if val_loss < best_val:
+    #     best_val = val_loss
+    #     last_improvement = epoch
+    #     torch.save(model.state_dict(), "models/best_model.pickle")
+    # if epoch - last_improvement >= 5:
+    #     break
 
 print('Finished Training')
 
 with torch.no_grad():
-    for i in range(22,30):
+    for i in range(22, 30):
+        print(i)
         example_image = ds_test.__getitem__(i)
 
-        cv2.imwrite(f"images/item{i}green.tif", np.rint(example_image[0, :, :].numpy()*255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}red.tif", np.rint(example_image[1, :, :].numpy()*255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}nir.tif", np.rint(example_image[2, :, :].numpy()*255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}re.tif", np.rint(example_image[3, :, :].numpy()*255).astype(np.uint8))
-        #cv2.imwrite(f"images/item{i}ndvi.tif", np.rint(example_image[4, :, :].numpy()*255).astype(np.uint8))
+        cv2.imwrite(f"images/item{i}green.tif", np.rint(example_image[0, :, :].numpy() * 255).astype(np.uint8))
+        cv2.imwrite(f"images/item{i}red.tif", np.rint(example_image[1, :, :].numpy() * 255).astype(np.uint8))
+        cv2.imwrite(f"images/item{i}nir.tif", np.rint(example_image[2, :, :].numpy() * 255).astype(np.uint8))
+        cv2.imwrite(f"images/item{i}re.tif", np.rint(example_image[3, :, :].numpy() * 255).astype(np.uint8))
+        # cv2.imwrite(f"initial_images/item{i}ndvi.tif", np.rint(example_image[4, :, :].numpy()*255).astype(np.uint8))
 
         ex = example_image.to(device)
         ex = torch.reshape(ex, (1, ex.shape[0], ex.shape[1], ex.shape[2]))
@@ -427,16 +524,17 @@ with torch.no_grad():
         cv2.imwrite(f"images/item{i}PredNIR.tif", np.rint(pred[2, :, :].numpy() * 255).astype(np.uint8))
         cv2.imwrite(f"images/item{i}PredRE.tif", np.rint(pred[3, :, :].numpy() * 255).astype(np.uint8))
 
-        cv2.imwrite(f"images/item{i}Class1.tif", np.rint(sing.squeeze()[0, :, :].numpy()*255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}Class2.tif", np.rint(sing.squeeze()[1, :, :].numpy()*255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}Class3.tif", np.rint(sing.squeeze()[2, :, :].numpy()*255).astype(np.uint8))
-        cv2.imwrite(f"images/item{i}Class4.tif", np.rint(sing.squeeze()[3, :, :].numpy()*255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class5.tif", np.rint(sing.squeeze()[4, :, :].numpy()*255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class6.tif", np.rint(sing.squeeze()[5, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class7.tif", np.rint(sing.squeeze()[6, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class8.tif", np.rint(sing.squeeze()[7, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class9.tif", np.rint(sing.squeeze()[8, :, :].numpy() * 255).astype(np.uint8))
-        # cv2.imwrite(f"images/item{i}Class10.tif", np.rint(sing.squeeze()[9, :, :].numpy() * 255).astype(np.uint8))
-    '''
+        cv2.imwrite(f"images/item{i}Class1.tif", np.rint(sing.squeeze()[0, :, :].numpy() * 255).astype(np.uint8))
+        cv2.imwrite(f"images/item{i}Class2.tif", np.rint(sing.squeeze()[1, :, :].numpy() * 255).astype(np.uint8))
+        cv2.imwrite(f"images/item{i}Class3.tif", np.rint(sing.squeeze()[2, :, :].numpy() * 255).astype(np.uint8))
+        cv2.imwrite(f"images/item{i}Class4.tif", np.rint(sing.squeeze()[3, :, :].numpy() * 255).astype(np.uint8))
+        cv2.imwrite(f"images/item{i}Class5.tif", np.rint(sing.squeeze()[4, :, :].numpy() * 255).astype(np.uint8))
+        # cv2.imwrite(f"initial_images/item{i}Class5.tif", np.rint(sing.squeeze()[4, :, :].numpy()*255).astype(np.uint8))
+        # cv2.imwrite(f"initial_images/item{i}Class6.tif", np.rint(sing.squeeze()[5, :, :].numpy() * 255).astype(np.uint8))
+        # cv2.imwrite(f"initial_images/item{i}Class7.tif", np.rint(sing.squeeze()[6, :, :].numpy() * 255).astype(np.uint8))
+        # cv2.imwrite(f"initial_images/item{i}Class8.tif", np.rint(sing.squeeze()[7, :, :].numpy() * 255).astype(np.uint8))
+        # cv2.imwrite(f"initial_images/item{i}Class9.tif", np.rint(sing.squeeze()[8, :, :].numpy() * 255).astype(np.uint8))
+        # cv2.imwrite(f"initial_images/item{i}Class10.tif", np.rint(sing.squeeze()[9, :, :].numpy() * 255).astype(np.uint8))
+
 
 
