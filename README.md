@@ -1,4 +1,5 @@
-*Columbia MS in Data Science capstone project repositiory for analysis of images taken over Greenland*
+
+**Columbia MS in Data Science Capstone project : Repository for analysis of images taken over Greenland**
 
 # Introduction
 The Greenland ice sheet (GrIS), one of the world's largest ice masses, plays a critical role in Earth's climate system and sea level dynamics. Recent decades have seen accelerated melting and changes in the ice sheet's albedo, which is the fraction of incoming solar radiation that is reflected from the ice surface. Albedo plays a pivotal role in regulating energy balance and meltwater production, thereby contributing to sea level rise. In recent years, the decreasing albedo over the GrIS has raised concerns about its future stability and contributions to sea-level rise. This research explores the background of the GrIS and the objectives of an expedition aimed at understanding its changing dynamics. 
@@ -31,7 +32,8 @@ TBD Link to Poster Presentation
 
 
 # Acknowledgements
-Sponsor: Marco Tedesco, Columbia Earth Institute
+Sponsor: Marco Tedesco, Columbia Lamont-Doherty Earth Observatory
 
-Team Members (Alphabetically): Braden Jacob Huffman (bjh2179) , Devan Samant (ds4114) ,Hugo Ginoux (hg2632), Samuel Edward Fields (sef2186) ,Sushant Surendra Prabhu (ssp2202)
+Team Members (Alphabetically): 
+Braden Jacob Huffman (bjh2179) , Devan Samant (ds4114) ,Hugo Ginoux (hg2632), Samuel Edward Fields (sef2186) ,Sushant Surendra Prabhu (ssp2202)
 
