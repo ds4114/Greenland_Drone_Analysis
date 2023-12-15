@@ -143,7 +143,7 @@ custom_transforms = transforms.Compose([
     transforms.RandomErasing(p=.2)
 ])
 
-ds = FullImageDataset(dir="train", transform=custom_transforms)
+ds = FullImageDataset(dir="train")
 
 # for i in range(ds.__len__()):
 #     im = ds.__getitem__(i)
@@ -154,8 +154,8 @@ ds = FullImageDataset(dir="train", transform=custom_transforms)
 dl = DataLoader(ds, 5, shuffle=True)
 print("Training set created")
 
-ds_val = FullImageDataset(dir="val")
-dl_val = DataLoader(ds_val, 4)
+ds_val = FullImageDataset(dir="val", transform=custom_transforms)
+dl_val = DataLoader(ds_val, 5)
 
 # for i in range(ds_val.__len__()):
 #     im = ds_val.__getitem__(i)
@@ -181,28 +181,28 @@ class FeatureNet(Module):
 
     def __init__(self):
         super(FeatureNet, self).__init__()
-        self.conv1 = Conv2d(4, 64, 21, padding=10)
+        self.conv1 = Conv2d(4, 16, 21, padding=10)
         self.max_pool = MaxPool2d(kernel_size=(2, 2), stride=(2, 2), return_indices=True)
-        self.test = Conv2d(64, 64, 21, padding=10)
-        self.conv2 = Conv2d(64, 64, 21, padding=10)
-        self.up_conv1 = Conv2d(64, 64, 21, padding=10)
+        self.test = Conv2d(16, 16, 21, padding=10)
+        self.conv2 = Conv2d(16, 1664, 21, padding=10)
+        self.up_conv1 = Conv2d(16, 16, 21, padding=10)
         self.max_unpool = MaxUnpool2d(kernel_size=(2, 2), stride=(2, 2))
-        self.up_conv2 = Conv2d(128, 64, 21, padding=10)
+        self.up_conv2 = Conv2d(32, 16, 21, padding=10)
 
-        self.up_conv3 = Conv2d(128, 64, 21, padding=10)
-        self.test2 = Conv2d(64, 64, 21, padding=10)
+        self.up_conv3 = Conv2d(32, 15, 21, padding=10)
+        self.test2 = Conv2d(16, 16, 21, padding=10)
 
-        self.before_sm = Conv2d(64, 8, 21, padding=10)
+        self.before_sm = Conv2d(16, 8, 21, padding=10)
 
         self.to_sm = Conv2d(8, 5, 11, padding=5)
-        self.after = Conv2d(5, 64, 21, padding=10)
+        self.after = Conv2d(5, 16, 21, padding=10)
 
-        self.conv3 = Conv2d(64, 64, 21, padding=10)
-        self.conv4 = Conv2d(64, 64, 21, padding=10)
-        self.up_conv4 = Conv2d(64, 64, 21, padding=10)
+        self.conv3 = Conv2d(16, 16, 21, padding=10)
+        self.conv4 = Conv2d(16, 16, 21, padding=10)
+        self.up_conv4 = Conv2d(16, 16, 21, padding=10)
         self.max_unpool = MaxUnpool2d(kernel_size=(2, 2), stride=(2, 2))
-        self.up_conv5 = Conv2d(128, 64, 21, padding=10)
-        self.up_conv6 = Conv2d(128, 16, 21, padding=10)
+        self.up_conv5 = Conv2d(32, 15, 21, padding=10)
+        self.up_conv6 = Conv2d(32, 16, 21, padding=10)
 
         self.before_final = Conv2d(16, 16, 21, padding=10)
 
@@ -358,11 +358,15 @@ def Modified_Soft_Normalized_Cut_Loss(image, classes):
     #     return val
 
     def weighted_average(mask, values, weights):
+        mw = mask * weights
+
 
         non_zero = torch.sum(mask[0])
 
         mask = torch.stack([mask for i in range(values.shape[1])], dim=1)
-        masked = mask * values
+        mv = mask * values
+
+        masked = mv
 
         avg = torch.sum(masked, dim=(0, 2, 3)) / (.000001 + non_zero)
         assert values.shape[1] == avg.shape[0]
@@ -370,11 +374,11 @@ def Modified_Soft_Normalized_Cut_Loss(image, classes):
         for i in range(avg.shape[0]):
             masked[:, i, :, :] -= avg[i]
 
-        masked *= mask * weights
+        masked *= mw
 
         var = torch.pow(masked, 2)
 
-        scaled_vars = torch.sum(var) / (non_zero + .000001)
+        scaled_vars = torch.sum(var) / (torch.sum(mw) + .000001)
 
         return scaled_vars
 
@@ -421,7 +425,7 @@ num_epochs = 5
 last_improvement = 0
 best_val = float("inf")
 
-for epoch in tqdm(range(num_epochs)):
+for epoch in tqdm(range(5)):
     running_loss = 0.0
     blur_loss = 0
     uncert_loss = 0
@@ -429,7 +433,7 @@ for epoch in tqdm(range(num_epochs)):
 
     i = 0
     model.train()
-    for data in dl:
+    for data in tqdm(dl_val):
         # print(i)
         i += 1
         inputs = data
@@ -451,14 +455,14 @@ for epoch in tqdm(range(num_epochs)):
         # few_loss += 0#fp.item()
         # # smoothness_loss += torch.mean(ext_vals)
         # print(f"\t{inputs.shape}, {classes.shape}")
-        smoothness_loss = Modified_Soft_Normalized_Cut_Loss(inputs.clone(), classes) * .01
+        #smoothness_loss = Modified_Soft_Normalized_Cut_Loss(inputs.clone(), classes) * .01
 
-        smoothness_loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
+        # smoothness_loss.backward()
+        # optimizer.step()
+        # optimizer.zero_grad()
 
-        blur_loss += smoothness_loss.item()
-        outputs, classes = model(inputs)
+        # blur_loss += smoothness_loss.item()
+        # outputs, classes = model(inputs)
 
         acc_loss = criterion(outputs, inputs)
         loss = acc_loss  # + smoothness_loss * .01
@@ -503,6 +507,7 @@ for epoch in tqdm(range(num_epochs)):
 print('Finished Training')
 
 with torch.no_grad():
+    torch.save(model.state_dict(), "models/best_model.pickle")
     for i in range(22, 30):
         print(i)
         example_image = ds_test.__getitem__(i)
