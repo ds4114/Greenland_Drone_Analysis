@@ -15,7 +15,7 @@ The python packages required to run this code are included in the requirements.y
 Data (images of Greenland) are hosted on Google Drive and partially replicated locally for analysis. Raw images were processed with Pix4D Mapper to correct for albedo adjustments and to stich together into mosaics. If you would like access to the data, please reach out. 
 
 ### Example Image
-TBD
+![alt text](https://github.com/ds4114/Greenland_Drone_Analysis/blob/main/docs/DJI_20230715082014_0010_D.jpg)
 
 
 # Repo Contents
@@ -28,8 +28,8 @@ The data folder structure is as follows:
 
 
 # Results and Takeaways
-TBD Link to Poster Presentation
-
+- Paper:  https://docs.google.com/document/d/1ozPPcIoGJ62VficfdIoqLq4zrUzDLEBl/edit
+- Poster: https://docs.google.com/presentation/d/1-VtdJFuupKcrpl2XHIIQlF2CuT93zejB/edit
 
 # Acknowledgements
 Sponsor: Marco Tedesco, Columbia Lamont-Doherty Earth Observatory
