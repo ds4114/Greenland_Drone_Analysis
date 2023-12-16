@@ -50,7 +50,7 @@ Data (images of Greenland) are hosted on Google Drive and partially replicated l
 │       ds4114_spectral_profiling.ipynb - Contains preliminary EDA on spectral profiles contain in raw data
 │       hg2632_data exploration.ipynb - Contains preliminary EDA on raw pixel values
 │       hg2632_entropy_overlap.ipynb - Contains image entropy analysis
-│       hg2632_image_processing.ipynb - 
+│       ssp2202_image_processing.ipynb - Contains image processing analysis
 │       sef2186_drone_overlap.ipynb - Contains code to identify and extract a common land area
 │
 ├───docs
