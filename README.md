@@ -9,7 +9,8 @@ Unique multi-spectral and multi-altitude images were captured in mid 2023 which 
 
 # Using this Repo
 ### Required Packages
-The python packages required to run this code are included in the requirements.yml file.
+The python packages required to run the notebooks are included in the requirements.yml file.
+The Python packages required to run the W-Net architecture are included in w_net_environment.yml.
 
 ### Underlying Data
 Data (images of Greenland) are hosted on Google Drive and partially replicated locally for analysis. Raw images were processed with Pix4D Mapper to correct for albedo adjustments and to stich together into mosaics. If you would like access to the data, please reach out. 
