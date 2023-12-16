@@ -42,8 +42,8 @@ Data (images of Greenland) are hosted on Google Drive and partially replicated l
 │
 ├───code
 │       bjh2179_W_Net.py   - Contains deep learning segmentation and reconstruction analysis
-│       bjh2179_to_colors.py -
-│       bjh2179_vis.py - 
+│       bjh2179_to_colors.py - Displays a color-combined, rotated, flipped microscopy image.
+│       bjh2179_vis.py - Contains Deep learning for satellite image segmentation and analysis.
 │       ds4114_Greenland_File_Profiling.ipynb - Contains analysis of raw and processed file counts by altitude and spectrum
 │       ds4114_albedo_clustering.ipynb - Contains pixel k-means clustering analysis
 │       ds4114_calibration_exploration.ipynb - Contains preliminary EDA on calibration and albedo correction image processing
